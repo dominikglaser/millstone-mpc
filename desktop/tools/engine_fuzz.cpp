@@ -79,6 +79,12 @@ int main(int argc, char **argv) {
         E->set_param(d, "lpg_decay", "20");
         E->set_param(d, "e_damp", "20");
         E->set_param(d, "e_space", "0");
+        // Bypass the fx for the silence check: a reverb/delay tail (bounded, up to the 60 s cap) is not a
+        // stuck voice. The fx ran with random settings through the play phase above, so NaNs are still caught.
+        E->set_param(d, "fx_ph_mix", "0");
+        E->set_param(d, "fx_ch_mode", "0");
+        E->set_param(d, "fx_dl_mix", "0");
+        E->set_param(d, "fx_rv_mix", "0");
         uint8_t pedal[3] = {0xb0, 64, 0};
         E->midi(d, pedal, 3);
         for (int note = 0; note < 128; note++) { uint8_t off[3] = {0x80, (uint8_t)note, 0}; E->midi(d, off, 3); }
