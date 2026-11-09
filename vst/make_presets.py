@@ -4,7 +4,7 @@
 Each preset states only what differs from BASE, but the file lists every parameter: the MPC's PRESET menu sets only the
 values a preset lists, so anything left out would leak in from the preset before it. It also means a later change to a
 parameter's default cannot alter a saved sound. preset_trim.json holds each preset's measured VOLUME, set by
-desktop/tools/preset_test --trim so that a library played one after the other stays even."""
+the preset-test tool (in the main millstone repo) so that a library played one after the other stays even."""
 import json, os
 from preset_tags import TAGS, TYPES, STYLES, CHARACTERS
 from preset_fx import FX

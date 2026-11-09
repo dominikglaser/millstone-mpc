@@ -29,4 +29,4 @@ License: MIT, Emilie Gillet (`src/third_party/eurorack/LICENSE.txt`).
 ## Mutable Instruments Rings reverb (MIT)
 
 `src/third_party/eurorack/rings/dsp/fx/{fx_engine.h,reverb.h}` come from the same upstream repository, commit `f4cfa76`,
-unchanged, for the desktop plugin's NORMAL reverb (`desktop/src/fx/Reverb.cpp`). The MPC build does not compile them.
+unchanged, for the NORMAL reverb (`src/fx/Reverb.cpp`), compiled into the engine.

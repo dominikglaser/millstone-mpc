@@ -1,9 +1,11 @@
 # Testing
 
 ## Offline (x86)
-- `tests/run.sh fast build/demo.wav`: engine tests (every model x every VCA mode makes sound and goes quiet,
-  3 oscillators + HP + drive + noise, polyphony and stealing, MONO note stack, LEGATO glide, sustain pedal, state
-  round-trip, worst-case CPU timing) and a demo WAV. `tests/run.sh asan` runs the same under ASan/UBSan.
+- `tools/run_tests.sh [patches]`: all the JUCE-free checks in one go — the engine test, the fx test
+  (each effect measured directly) and the engine fuzzer. Needs `MPC_VST` set to a checkout of the port kit.
+- `tests/run.sh fast build/demo.wav`: just the engine tests (every model x every VCA mode makes sound and goes
+  quiet, 3 oscillators + HP + drive + noise, polyphony and stealing, MONO note stack, LEGATO glide, sustain pedal,
+  state round-trip, worst-case CPU timing) and a demo WAV. `tests/run.sh asan` runs the same under ASan/UBSan.
 - `$MPC_VST/tools/test_port.sh vst/vst.json`: the port kit's wrapper-level host test. One known FAIL: the
   step_of "steps one option" check taps a button twice within a block, which the wrapper's tap debounce drops.
 
