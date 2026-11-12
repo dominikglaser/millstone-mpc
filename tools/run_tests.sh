@@ -26,3 +26,7 @@ g++ -std=gnu++14 -O2 -w -DTEST -include cstdio -Isrc -Isrc/fx -Isrc/third_party/
 echo "== engine fuzz ($PATCHES patches) =="
 g++ $FLAGS $SRC tools/engine_fuzz.cpp -lm -o "$OUT/engine_fuzz"
 "$OUT/engine_fuzz" "$PATCHES"
+
+echo "== tides vca / filter test =="
+g++ $FLAGS $SRC tools/tides_vca_test.cpp -lm -o "$OUT/tides_vca_test"
+"$OUT/tides_vca_test" | tail -3

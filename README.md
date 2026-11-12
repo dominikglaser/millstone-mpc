@@ -71,6 +71,9 @@ It comes with 700 synth presets and 40 FX presets.
 VCA modes: **ENV** shapes every note with the VCA ADSR. **LPG** patches TRIG into Plaits' own low-pass gate (LPG DECAY /
 COLOUR), like a hardware trigger input: pings, plucks, drums. **ON** opens the VCA for as long as the key is held. In every
 mode the self-enveloped models (6-op FM, string, modal, bass drum, snare, hi-hat) receive a gate from the keys.
+**TIDES 1-4** let one Tides output be the VCA, with no amp envelope: an AD/AR output plays its tail out after key up,
+a LOOP output closes with the key. The filter's MOD SOURCE takes TIDES 1-4 as well. Use Tides OUTPUT PHASE or GATES
+for this (in AMP, SHIFT decides which outputs carry the signal).
 
 MIDI: notes with velocity, mod wheel (CC 1, scaled by WHEEL > LFO), sustain pedal (CC 64), channel and polyphonic aftertouch,
 pitch bend (BEND RANGE), all notes off.
