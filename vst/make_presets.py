@@ -10,7 +10,7 @@ from preset_tags import TAGS, TYPES, STYLES, CHARACTERS
 from preset_fx import FX
 from preset_helpers import *
 from preset_pitch import true_to_note, MOVE
-import pack_dub, pack_classic, pack_rave, pack_techno, pack_space, pack_elements, pack_drums, pack_patch, pack_modular, pack_cross, pack_deep
+import pack_dub, pack_classic, pack_rave, pack_techno, pack_space, pack_elements, pack_drums, pack_patch, pack_modular, pack_cross, pack_deep, pack_cinema
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MODELS = ["Virtual Analog", "Waveshaper", "FM 2-Op", "Grain Formant", "Additive", "Wavetable", "Chords", "Speech", "Swarm",
@@ -216,7 +216,7 @@ SONG = {
 OFF_VALUES = ("OFF", 0)
 
 OUTPUT = json.load(open(os.path.join(HERE, "preset_output.json")))   # make-up gain, dB, for sounds that full VOLUME cannot bring up to level
-PACKS = [pack_dub, pack_classic, pack_rave, pack_techno, pack_space, pack_elements, pack_drums, pack_patch, pack_modular, pack_cross, pack_deep]   # later packs, one file each, in the order they arrived
+PACKS = [pack_dub, pack_classic, pack_rave, pack_techno, pack_space, pack_elements, pack_drums, pack_patch, pack_modular, pack_cross, pack_deep, pack_cinema]   # later packs, one file each, in the order they arrived
 PACK_OF = {}
 UNMATCHED = {"Upright Dub", "Bowed Metal", "Bowed Glass", "Bowed Lead"}   # bowed and bouncing: their level swings by several dB with the shared noise generator
 for pack in PACKS:
@@ -263,7 +263,8 @@ def filed(name, values, note, unmatched=False):
 
 def main():
     spec = json.load(open(os.path.join(HERE, "params.json")))
-    params = [p for p in spec["params"] if not p.get("momentary")]
+    # p_type / p_preset are the PRESETS page's browser: setting them loads a preset, so a preset must never list them
+    params = [p for p in spec["params"] if not p.get("momentary") and p["key"] not in ("p_type", "p_preset")]
     keys = [p["key"] for p in params]
     missing = [k for k in keys if k not in BASE]
     assert not missing, "BASE lacks %s" % missing

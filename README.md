@@ -49,7 +49,7 @@ the voices are **two LFOs**, **Tides**, **eight Euclidean clocks** and a **patch
 destinations. After them comes a rack of **phaser, chorus, tape echo and reverb**. There is no sequencer or arpeggiator: drive it
 from the MPC's sequencer, pads and keys.
 
-It comes with 700 synth presets and 40 FX presets.
+It comes with 750 synth presets (including the 50-sound Cinematic pack) and 40 FX presets.
 
 ## Signal flow
 
