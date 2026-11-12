@@ -13,6 +13,7 @@ TARGET=${1:-aarch64}
 cd "$ROOT"
 SRC=$(python3 -c "import json;print(' '.join(json.load(open('vst/vst.json'))['build']['sources']))")
 SO=$(python3 -c "import json;print(json.load(open('vst/vst.json'))['so'])")
+python3 vst/gen_preset_types.py >/dev/null || exit 1   # vst/build/preset_types.h for the PRESETS page
 CFLAGS="-DTEST -Isrc -Isrc/third_party/eurorack -Ivst/build -I$MV/wrapper -O3 -ffast-math -fPIC -fvisibility=hidden -w"
 
 build() {   # build <triple> <outdir> <extra flags>
@@ -26,7 +27,7 @@ build() {   # build <triple> <outdir> <extra flags>
   done
   $ZIG cc -target "$T" $XF $CFLAGS -std=gnu11 -c "$MV/wrapper/vst2_wrap.c" -o "$OUT/vst2_wrap.o"
   $ZIG c++ -target "$T" $XF -O3 -shared -fPIC -fvisibility=hidden $OBJS "$OUT/vst2_wrap.o" -lm -lpthread \
-      -Wl,--no-undefined -Wl,-s -o "$OUT/$SO"
+      -Wl,--no-undefined -Wl,--version-script=vst/exports.map -Wl,-s -o "$OUT/$SO"
   echo "built $OUT/$SO"
   file "$OUT/$SO" | sed 's/, BuildID.*//'
   echo "exported: $(readelf --dyn-syms -W "$OUT/$SO" | grep -E ' GLOBAL .* [0-9]+ [A-Za-z]' | grep -v UND | awk '{print $8}' | tr '\n' ' ')"

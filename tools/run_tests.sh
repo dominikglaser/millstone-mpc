@@ -10,6 +10,7 @@ mkdir -p "$OUT"
 cd "$ROOT"
 
 python3 "$MV/tools/gen_vst.py" vst/vst.json --params-h >/dev/null
+python3 vst/gen_preset_types.py >/dev/null || exit 1   # vst/build/preset_types.h for the PRESETS page
 SRC=$(python3 -c "import json;print(' '.join(json.load(open('vst/vst.json'))['build']['sources']))")
 INC="-Isrc -Isrc/third_party/eurorack -Ivst/build -I$MV/wrapper"
 FLAGS="-std=gnu++14 -O2 -ffast-math -w -DTEST -include cstdio $INC"

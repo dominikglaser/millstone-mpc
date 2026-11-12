@@ -1,11 +1,47 @@
 # Millstone MPC
 
-An 8-voice hybrid synth for **Akai MPC standalone** devices (Gen2 / aarch64, such as the MPC Key 37 Gen 2). It runs inside
-the MPC's own plugin host as a native VST2, with a touchscreen page for every section. This is the MPC-only build of
-[Millstone](https://github.com/dominikglaser/millstone); the macOS plugin lives in that separate repo.
+An 8-voice hybrid synth for **Akai MPC standalone** devices: Gen2 (64-bit, such as the MPC Key 37 Gen 2, Live III, One G2,
+XL) and Gen1 (32-bit). It runs inside the MPC's own plugin host as a native VST2, with a touchscreen page for every section.
+This is the MPC-only build of [Millstone](https://github.com/dominikglaser/millstone); the macOS plugin lives in that
+separate repo.
 
-> **Status: in development, not yet tested on hardware.** Built for MPC OS 3.x (glibc 2.39). Installing third-party plugins on
-> a standalone MPC is unofficial and done at your own risk.
+> **Status: in development, not yet tested on hardware.** Needs **MPC OS 3.10.1 or later**, which loads third-party plugins
+> officially through Akai's [MPC Plugin SDK](https://github.com/inmusic-software/mpc-plugin-builder-sdk) folder format.
+> inMusic does not test or support third-party plugins: save your work often.
+
+## Install
+
+1. On the MPC: **Preferences → Enhancements (Beta)**, turn on **Enable Enhancements** and **External Plugin Support**.
+2. Copy the folder `glaser - VST - Millstone` (from the release zip, or `dist/` after a build) into a folder named exactly
+   **`VST2 Plugins`** at the root of a USB stick, SD card or the MPC's internal drive.
+3. Restart the MPC. Millstone is listed in the plugin browser under **External Plugins**.
+
+To uninstall, delete the folder. No root, no helper apps and no system changes are needed.
+
+## The screen
+
+Eight function keys, in signal-flow order. Pressing a key again cycles its pages:
+
+| Key | Pages |
+|---|---|
+| OSC | OSC 1 · OSC 2 · OSC 3 · ELEMENTS |
+| FLT/VCA | filter and VCA |
+| ENV | VCA and MOD envelopes |
+| LFO | LFO1/VCE (LFO 1 and voice settings) · LFO 2 · TIDES |
+| MOD | MOD 1-6 · MOD 7-12 (patch bay as a mod matrix) |
+| CLK | CLK 1-2 · CLK 3-4 · CLK 5-6 · CLK 7-8 (Euclidean clocks, two per page; SRC and BPM on CLK 1-2) |
+| FX | PHASER · CHORUS · DELAY · REVERB (with the master OUTPUT) |
+| PRESETS | the 700 factory sounds by TYPE (Bass, Keys, Pad ...): pick a type, step with - / + |
+
+The factory sounds are also in MPC's own PRESET menu (one flat list; category folders there are only for Akai's own
+plugin format) and, by category, behind the MILLSTONE tile in Sounds > Instruments. Your own presets: the save/load
+icons at the top right of the plugin screen.
+
+The skin is a cream hardware panel with wood cheeks, drawn by `vst/skin/make_art.py` (Pillow: knob filmstrip, plate,
+switches, buttons) and laid out by `vst/skin/pages.py`, which writes every page of `vst/layout.conf` from one grid.
+
+With the Q-Links banked to the track (Program mode), the four knob columns are filter (cutoff, resonance, env amount,
+drive), amp envelope (ADSR), oscillators 1 and 2 (timbre, morph) and LFO rate, delay mix, reverb mix, volume.
 
 Each voice has **three Mutable Instruments Plaits macro-oscillators** (all 24 models; OSC 1 can also be **Elements**), a **24 dB
 ladder filter** (low-pass or high-pass), **VCA and modulation ADSR envelopes**, and a **VCA** with ENV / LPG / ON modes. Around
@@ -49,9 +85,30 @@ which wraps the shared engine as a VST2 and draws the skin as native MPC pages.
 ```sh
 # needs a checkout of open-mpc/mpc-vst-plugins at ../mpc-vst-plugins (or set MPC_VST)
 python3 "$MPC_VST/tools/gen_vst.py" vst/vst.json --params-h   # parameters
-vst/build_zig.sh aarch64                                      # Gen2 .so (Zig; no Docker)
+python3 "$MPC_VST/tools/gen_vst.py" vst/vst.json              # skin (TUI.json, Q-Links.json, images)
+vst/build_zig.sh aarch64 && vst/build_zig.sh armv7            # Gen2 and Gen1 .so (Zig; no Docker)
 tools/run_tests.sh                                            # engine, fx and fuzz checks
+python3 vst/package_mpc.py --zip                              # dist/: the folder in Akai's SDK format, and a zip
+python3 tools/check_mpc_folder.py "dist/glaser - VST - Millstone" --params vst/build/params.h
 ```
+
+The skin uses the kit's browser renderer (`"art": "html"` in `vst/vst.json`), which needs Playwright's Chromium, installed
+once: `python3 -m pip install --user playwright pillow && python3 -m playwright install chromium`. The kit also needs
+the local patch in `vst/kit-patches/` (a tap outside an open dropdown closes it): `git -C "$MPC_VST" apply
+"$PWD/vst/kit-patches/0001-popup-tap-outside-closes.patch"`. To change the look or a page:
+
+```sh
+python3 vst/skin/make_art.py            # knob strip, plate with wood cheeks, switches, buttons (vst/skin/*.png)
+python3 vst/skin/pages.py vst/layout.conf   # every [tab] section of layout.conf, from one grid
+```
+
+Then rebuild as above. `tools/mpc_screenshot.sh <ip> shot.png --plugin` grabs the MPC's screen (read-only, needs
+developer mode) to check a page on the device.
+
+The packaged folder follows Akai's specification, vendored in [`docs/akai-sdk/`](docs/akai-sdk/README.md):
+`plugin.json`, `version.xml`, `VST/millstone-arm64.so` and `VST/millstone-arm32.so`, `Plugin Skins/`.
+`vst/package_mpc.py` also puts the kit's one-page-per-key skin onto the eight function keys above. Notes for AI coding
+agents are in [`AGENTS.md`](AGENTS.md).
 
 This build differs from the macOS Millstone in two ways: the full engine (Elements, Tides, the clocks) is always compiled in
 (the `MILLSTONE_FULL` flag), and the effects run inside the shared engine rather than in a host, so there is no JUCE.
@@ -60,7 +117,8 @@ This build differs from the macOS Millstone in two ways: the full engine (Elemen
 
 Everything in this build is MIT: Millstone's own source ([`LICENSE`](LICENSE)); Plaits, Elements, Tides, Rings and stmlib by
 Emilie Gillet (Mutable Instruments), vendored in `src/third_party/eurorack` (`src/VENDORED.md`); and the Open MPC port kit's
-wrapper and parameter generator. There is **no JUCE and no Steinberg SDK** in this build, so no AGPL/GPL obligation applies.
+wrapper and parameter generator. Akai's SDK documentation in `docs/akai-sdk/` is MIT (© inMusic Brands, Inc.). There is
+**no JUCE and no Steinberg SDK** in this build, so no AGPL/GPL obligation applies.
 [`THIRD_PARTY_NOTICES.txt`](THIRD_PARTY_NOTICES.txt) lists every part and its licence.
 
 VST is a trademark of Steinberg Media Technologies GmbH; VST2 here uses the port kit's hand-written ABI header, not Steinberg's

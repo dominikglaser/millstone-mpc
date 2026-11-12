@@ -283,7 +283,11 @@
     {"key": "lfo2_sync", "name": "LFO2 SYNC", "options": ["OFF", "ON"], "default": "OFF"},
     {"key": "lfo2_div", "name": "LFO2 DIV", "options": ["4 BAR", "2 BAR", "1 BAR", "1/2", "1/4", "1/8", "1/16", "1/32"], "default": "1/4"},
     {"key": "lfo2_lock", "name": "LFO2 PHASE", "options": ["FREE", "BAR"], "default": "FREE"},
-    {"key": "lfo_page", "name": "LFO PAGE", "options": ["1", "2"], "default": "1"}
+    {"key": "lfo_page", "name": "LFO PAGE", "options": ["1", "2"], "default": "1"},
+    {"key": "p_type", "name": "TYPE", "options": ["Init", "Bass", "Keys", "Lead", "Pad", "Pluck", "Perc", "Sequence", "Drone", "Texture", "Riser & FX"], "default": "Init", "refresh_display": true},
+    {"key": "p_preset", "name": "PRESET", "min": 1, "max": 83, "default": 1, "display": "int", "dynamic_display": true, "refresh_display": true, "nudge_pct": 10},
+    {"key": "p_preset_prev", "name": "PRESET <", "min": 0, "max": 1, "default": 0, "momentary": true, "step_of": "p_preset", "step_delta": -1},
+    {"key": "p_preset_next", "name": "PRESET >", "min": 0, "max": 1, "default": 0, "momentary": true, "step_of": "p_preset", "step_delta": 1}
   ],
   "sections": [
     {"label": "VOICE", "keys": ["voices", "voice_mode", "glide", "vibrato", "noise", "lpg_decay", "lpg_colour"]},

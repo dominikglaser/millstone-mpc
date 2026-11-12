@@ -16,6 +16,9 @@ extern "C" {
 #include "engine.h"
 }
 #include "params.h"
+#ifdef NPRESETS
+#include "preset_types.h"   // each factory preset's TYPE, for the PRESETS page (vst/gen_preset_types.py)
+#endif
 #include "dsp_bits.h"
 #include "stmlib/utils/buffer_allocator.h"
 #include "plaits/dsp/voice.h"
@@ -1136,8 +1139,49 @@ void ms_midi(void *inst, const uint8_t *msg, int len) {
     }
 }
 
+#ifdef NPRESETS
+// ---- the PRESETS page: TYPE picks a category, PRESET steps through it --------------------------------------------
+// MPC lists a VST2's presets as one flat list (category folders are for Akai's own plugin format), so the skin browses
+// them itself. The current preset is the PRESET-th one of type TYPE, in presets.json order.
+void ms_set_param(void *inst, const char *key, const char *val);
+
+int typed_preset(const Instance *in, int *slot_out) {
+    const int t = clampi((int)lroundf(in->val[key_index("p_type")]), 0, PRESET_TYPES - 1);
+    const int n = PRESET_TYPE_COUNT[t];
+    if (n <= 0) return -1;
+    const int slot = clampi((int)lroundf(in->val[key_index("p_preset")]), 1, n);
+    if (slot_out) *slot_out = slot;
+    for (int p = 0, seen = 0; p < NPRESETS; p++)
+        if (PRESET_TYPE[p] == t && ++seen == slot) return p;
+    return -1;
+}
+
+// Loads it the way the wrapper loads a preset from MPC's PRESET menu: every listed value through set_param, in order.
+// A project or preset restore writes p_type/p_preset through "state" instead, so it never reloads over the user's edits.
+void load_typed_preset(Instance *in) {
+    int slot = 1;
+    const int p = typed_preset(in, &slot);
+    if (p < 0) return;
+    in->val[key_index("p_preset")] = (float)slot;   // a step past the end of a type stays on its last preset
+    for (int v = 0; v < PRESETS[p].n; v++)
+        ms_set_param(in, PARAMS[PRESETS[p].values[v].param].key, PRESETS[p].values[v].value);
+}
+#endif
+
 void ms_set_param(void *inst, const char *key, const char *val) {
     Instance *in = (Instance *)inst;
+#ifdef NPRESETS
+    if (!strcmp(key, "p_type") || !strcmp(key, "p_preset")) {
+        const int i = key_index(key), ti = key_index("p_type"), pi = key_index("p_preset");
+        if (i < 0 || ti < 0 || pi < 0) return;
+        const int type_before = (int)lroundf(in->val[ti]);
+        set_param_idx(in, i, (float)atof(val));
+        if (i == ti && (int)lroundf(in->val[ti]) == type_before) return;   // the same type again: keep the sound
+        if (i == ti) in->val[pi] = 1.0f;                                    // a new type starts at its first preset
+        load_typed_preset(in);
+        return;
+    }
+#endif
     if (!strcmp(key, "lfo_bpm")) { in->bpm = clampf((float)atof(val), 20.0f, 300.0f); return; }
     if (!strcmp(key, "transport")) return;
     if (!strcmp(key, "state")) {
@@ -1179,6 +1223,12 @@ int ms_get_param(void *inst, const char *key, char *buf, int buf_len) {
         }
         return pos;
     }
+#ifdef NPRESETS
+    if (!strcmp(key, "p_preset_display")) {   // PRESET's text on screen (dynamic_display): the preset's name
+        const int p = typed_preset(in, 0);
+        return p < 0 ? 0 : snprintf(buf, buf_len, "%s", PRESETS[p].name);
+    }
+#endif
     int i = key_index(key);
     if (i < 0 || PARAMS[i].momentary) return 0;
     if (PARAMS[i].nopts || PARAMS[i].int_display) return snprintf(buf, buf_len, "%d", (int)lroundf(in->val[i]));

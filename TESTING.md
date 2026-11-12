@@ -9,12 +9,23 @@
 - `$MPC_VST/tools/test_port.sh vst/vst.json`: the port kit's wrapper-level host test. One known FAIL: the
   step_of "steps one option" check taps a button twice within a block, which the wrapper's tap debounce drops.
 
-## Device
+## Package (Akai SDK format)
+- `python3 vst/package_mpc.py --zip` then `python3 tools/check_mpc_folder.py "dist/glaser - VST - Millstone" --params
+  vst/build/params.h`: folder name, `plugin.json`, both binaries (architecture, libraries, glibc, only `VSTPluginMain`
+  exported), `version.xml`, tabs and sub-tabs, parameter handles, images, Q-Links. It mirrors the SDK's
+  `tools/validate.py`. Must report 0 errors.
+- Stronger, from a checkout of Akai's SDK: `python3 tools/validate.py <folder>` and its host simulator
+  (`host_sim <native build> test`), which loads the plugin the way the MPC does. Needs a native (macOS) build of the
+  wrapper; not set up yet.
+
+## Device (MPC OS 3.10.1+, External Plugin Support on, folder in `VST2 Plugins`)
 | # | Check | Result |
 |---|---|---|
-| 1 | Plugin appears in the plugin list and loads on a track | not yet run |
-| 2 | Plays from pads / keys, polyphonic | not yet run |
-| 3 | Skin pages draw, popups open and close, prev/next step one model per tap | not yet run |
-| 4 | Q-Links move the right knobs per page | not yet run |
-| 5 | Save / reload project restores every parameter | not yet run |
-| 6 | CPU with 8 voices x 3 oscillators (tools/bench.sh) | not yet run |
+| 1 | Plugin appears under External Plugins and loads on a track | OK (2026-11-12, Key 37 G2, 3.10.1.12) |
+| 2 | Plays from pads / keys, polyphonic | OK (2026-11-12) |
+| 3 | Skin pages draw, popups open and close (also on a tap outside), prev/next step | OK (2026-11-12) |
+| 4 | Eight function keys; pressing a key again cycles its pages (OSC 1→2→3→ELEMENTS, CLK 1-2→…→7-8) | OK (2026-11-12) |
+| 5 | Q-Links move the right knobs per page and per sub-tab | not yet run |
+| 6 | Program Mode Q-Links: filter / ADSR / osc timbre-morph / LFO-mix-volume columns | not yet run |
+| 7 | Save / reload project restores every parameter | not yet run |
+| 8 | CPU: 8 voices x 3 Plaits, then Elements and Tides, clocks and fx (MPC CPU meter) | not yet run |

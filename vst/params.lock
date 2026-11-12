@@ -272,3 +272,7 @@ lfo2_sync
 lfo2_div
 lfo2_lock
 lfo_page
+p_type
+p_preset
+p_preset_prev
+p_preset_next

@@ -1,0 +1,21 @@
+diff --git a/tools/shadow_skin.py b/tools/shadow_skin.py
+index 3fcf899..9e5ab8e 100644
+--- a/tools/shadow_skin.py
++++ b/tools/shadow_skin.py
+@@ -1142,7 +1142,15 @@ def build(layout_path, params, skin_dir, art_bin, png_from_ppm):
+                 pkey = "shPopPanel_%d_%s" % (t, w["key"])
+                 defs[pkey] = _local(pkey, [], [_sub("Image", {"version": 2, "imageType": "Regular", "colour": "0",
+                                                               "image": panel + ".png"}, _bounds(0, 0, pw, ph), "Image")])
+-                parts = [_placed(pkey, "%s list" % name, oi, px, py, pw, ph, focus="No")]
++                # A tap anywhere outside the open list closes it: an invisible catcher over the whole plugin area, shown
++                # only while the list is open, under the list but over the page. It toggles the "open" flag like a tap
++                # on the field does (the field is under it too, so tapping the field still closes the list).
++                ckey = "shPopCatcher"
++                defs.setdefault(ckey, _local(ckey, [_action("Mouse Down", "Toggle Switch")],
++                                             [_sub("Image", {"version": 2, "imageType": "Regular", "colour": "0", "image": ""},
++                                                   _bounds(0, 0, W, H), "Image")]))
++                parts = [_placed(ckey, "%s close" % name, oi, 0, Y_OFF, W, H, focus="No"),
++                         _placed(pkey, "%s list" % name, oi, px, py, pw, ph, focus="No")]
+                 n = len(w["options"])
+                 fills, inks = popup_option_fills(w), popup_option_inks(w)
+                 for o, (ox, oy, ow, oh) in enumerate(orects):

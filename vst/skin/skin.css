@@ -1,0 +1,40 @@
+/* Millstone MPC skin: cream hardware panel, bold dark type, dashed section frames, light fields.
+ * Loaded after the port kit's tools/html_art/default.css (see its header for the classes). Colours come from the
+ * theme_* lines in vst/layout.conf; sizes and positions stay the layout's (MPC places its live controls there). */
+:root {
+  --title-size: 25px;
+  --label-size: 19px;
+  --seg-size: 18px;
+  --button-size: 22px;
+  --radius: 5px;
+  --sheen: 0.05;
+  --shadow: drop-shadow(0 2px 2px rgba(40, 30, 15, 0.45));
+}
+
+text { font-weight: 700; }
+
+/* section frames: dashed and rounded, the title in the ink, no rule under it */
+.frame-border { fill: none; stroke: var(--line); stroke-width: 2; stroke-dasharray: 10 7; rx: 16px; ry: 16px; }
+.frame-rule { display: none; }
+.frame-title { fill: var(--ink); letter-spacing: 0.09em; }
+
+.text { fill: var(--ink); }
+
+/* fields (popup, stepper, readout): light, with a dark edge, like a paper scale window */
+.box { fill: var(--lcd); stroke: var(--line); stroke-width: 2; }
+.box-label { fill: var(--ink); letter-spacing: 0.08em; }
+.arrow-bg { fill: var(--line); }
+.arrow { fill: var(--lcd); }
+
+/* option segments */
+.seg-tx { letter-spacing: 0.04em; }
+
+/* trigger buttons (- / +): dark caps */
+.button-bg { fill: #2a2520; }
+
+/* raised caps: a soft shadow down-right (the light is top left, as on the knobs and switches) and a lit top edge */
+.button-bg { filter: drop-shadow(3px 4px 3px rgba(40, 30, 15, 0.5)); }
+.button-sheen { fill: url(#sheen-linear); opacity: 0.9; }
+.arrow-bg { filter: drop-shadow(2px 3px 2px rgba(40, 30, 15, 0.45)); }
+/* the - / + caps are images now (vst/skin/make_art.py): print their label large and bold */
+.button.look-image .button-tx { font-size: 34px; font-weight: 700; fill: var(--btn-text-plain, #f6f2e8); }
