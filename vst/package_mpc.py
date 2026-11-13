@@ -169,6 +169,10 @@ def main():
     else:
         print("note: no vst/build/presets_xpl/ (run tools/preset_states + vst/make_xpl.py): packaged without Presets/")
 
+    # The MIT licences (ours and Mutable Instruments') must travel with every copy of the binary.
+    for doc in ("LICENSE", "THIRD_PARTY_NOTICES.txt"):
+        shutil.copy2(os.path.join(ROOT, doc), os.path.join(out, doc if doc.endswith(".txt") else doc + ".txt"))
+
     print("packaged %s (%s)" % (out, ", ".join(k for k in ("file64", "file32") if k in pj)))
 
     if args.zip:
@@ -178,7 +182,14 @@ def main():
                    "   USB stick or SD card (create \"VST2 Plugins\" if needed).\n"
                    "2. On the MPC: Preferences > Enhancements (Beta): turn on Enable Enhancements and\n"
                    "   External Plugin Support, then restart.\n"
-                   "3. Millstone is listed in the plugin browser under External Plugins.\n" % (version, folder))
+                   "3. Load Millstone on a keygroup/plugin track from the plugin list, or pick a factory preset\n"
+                   "   by category under Sounds > Instruments > MILLSTONE. The PRESETS page (last function key)\n"
+                   "   also browses them by type.\n\n"
+                   "Tested on an MPC Key 37 Gen 2 (64-bit). The 32-bit build for Gen 1 MPCs (Live/Live II, One, X,\n"
+                   "Key 61, Key 37, Force) is included but not yet tested on hardware; heavy patches may use a lot\n"
+                   "of CPU there.\n\n"
+                   "To uninstall, delete the folder. Licences: LICENSE.txt and THIRD_PARTY_NOTICES.txt in the folder.\n"
+                   % (version, folder))
         with zipfile.ZipFile(zpath, "w", zipfile.ZIP_DEFLATED) as z:
             z.writestr("INSTALL.txt", install)
             for dp, _, files in os.walk(out):
