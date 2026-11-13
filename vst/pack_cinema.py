@@ -31,7 +31,7 @@ PAD = [
         o(1, "Additive", harm=20, timbre=4, morph=10), o(2, "Additive", oct=1, harm=25, timbre=6, morph=10, level=55), SOFT(3, oct=-1, level=45),
         Tid(22, mode="AR", out="PHASE", trig="NOTE", slope=40, smooth=70), L1(30),
         cords(("LFO", "O2 HARM", 8), ("AFTERTOUCH", "O1 TIMBRE", 12)),
-        both(phaser(18, rate=10, feedback=40), plate(46, decay=84)), vca_mode="TIDES 1", cutoff=74),
+        both(phaser(18, rate=10, feedback=40), plate(46, decay=76)), vca_mode="TIDES 1", cutoff=74),
     Lab("Bowed Horizon", "Elements bowing a long string over a soft sub; press harder to dig in", "Pad", "Cinematic Ambient", "Warm Evolving",
         BOW(e_model="STRING", e_geom=35, e_bright=45, e_damp=30, e_pos=25, e_space=55), SOFT(2, oct=-1, level=45), Tid(20, shift=60),
         cords(("AFTERTOUCH", "E BOW", 30), ("TIDES 1", "E POS", 15), ("TIDES 2", "E BRIGHT", 12)),
@@ -86,7 +86,7 @@ DRONE = [
     Lab("Event Horizon", "Low FM with its harmonics pulled by Tides, ringing at the edge", "Drone", "Cinematic Experimental", "Dark Metallic",
         o(1, "FM 2-Op", oct=-1, harm=40, timbre=30, morph=20), SOFT(2, semi=7, level=0), Tid(14, shift=50, smooth=80),
         cords(("TIDES 1", "O1 HARM", 10), ("TIDES 2", "O1 TIMBRE", 18), ("OSC 2", "VCA", 30)),
-        both(echo("1/2 D", 45, 20, high=40, wow=30), plate(44, decay=86, damping=55)), vca_mode="ON", attack=50, release=66, cutoff=60),
+        both(echo("1/2 D", 35, 20, high=40, wow=30), plate(44, decay=78, damping=55)), vca_mode="ON", attack=50, release=60, cutoff=60),
     Lab("Desert Monastery", "Bowed strings resonating in a stone hall, the geometry wandering", "Drone", "Cinematic Ambient", "Warm Evolving",
         BOW(e_model="STRINGS", e_geom=45, e_bright=40, e_damp=35, e_pos=30, e_space=65, e_bow=90, e_bow_t=55), Tid(12, smooth=80),
         cords(("TIDES 1", "E GEOM", 12), ("TIDES 2", "E POS", 14), ("AFTERTOUCH", "E BOW", 25)),
@@ -104,7 +104,7 @@ DRONE = [
         both(echo("1/2", 45, 22, high=40, wow=40), plate(44, decay=84)), noise=40, f_src="TIDES 1", f_mod=30, cutoff=40, reso=35, attack=55, release=66),
     Lab("Ancient Signal", "A voice from very far away, its syllables stepping every bar", "Drone", "Cinematic Experimental", "Dark Evolving",
         o(1, "Speech", oct=-1, harm=40, timbre=40, morph=45), SOFT(2, oct=-1, level=40), CLFO(1, "/4", "S/H"),
-        cords(("CLOCK 1", "O1 HARM", 15), ("CLOCK 1", "O1 MORPH", 20), ("LFO 2", "CUTOFF", 10)), L2(16),
+        cords(("CLOCK 1", "O1 TIMBRE", 18), ("CLOCK 1", "O1 MORPH", 20), ("LFO 2", "CUTOFF", 10)), L2(16),
         both(echo("1/4 D", 55, 26, high=45, wow=40), plate(42, decay=84)), attack=50, release=64, cutoff=48),
 ]
 
