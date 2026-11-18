@@ -4,3 +4,4 @@ vst/build/
 *.o
 *.so
 *.wav
+__pycache__/

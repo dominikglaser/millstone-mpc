@@ -3,6 +3,7 @@
 #   tools/mpc_screenshot.sh <mpc ip> out.png [--plugin]     (--plugin crops to the 1280x628 plugin area)
 # Builds the port kit's tools/drmgrab.c for aarch64 (Gen2) with Zig, copies it to /tmp on the MPC over SSH
 # (developer mode), runs it once, deletes it, and converts the raw framebuffer with Pillow.
+[ -f "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh" ] && . "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh"   # python3 = the kit environment
 set -euo pipefail
 [ $# -ge 2 ] || { sed -n 2,5p "$0"; exit 1; }
 ROOT=$(cd "$(dirname "$0")/.." && pwd); MV=${MPC_VST:-$ROOT/../mpc-vst-plugins}

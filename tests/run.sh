@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Build and run the engine tests natively (x86): tests/run.sh [asan|fast] [demo.wav]
 # Needs MPC_VST (a checkout of open-mpc/mpc-vst-plugins) and vst/build/params.h (gen_vst.py --params-h).
+[ -f "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh" ] && . "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh"   # python3 = the kit environment
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 MV=${MPC_VST:-$ROOT/../mpc-vst-plugins}

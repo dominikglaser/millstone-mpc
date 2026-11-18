@@ -99,7 +99,8 @@ python3 tools/check_mpc_folder.py "dist/glaser - VST - Millstone" --params vst/b
 
 The skin uses the kit's browser renderer (`"art": "html"` in `vst/vst.json`), which needs Playwright's Chromium, installed
 once: `python3 -m pip install --user playwright pillow ziglang && python3 -m playwright install chromium` (`ziglang` is
-the cross-compiler `vst/build_zig.sh` uses). The kit also needs
+the cross-compiler `vst/build_zig.sh` uses). The scripts first source `$MPC_DEV_KIT/tools/env.sh` when that file
+exists (a private environment with these packages); without it they use your `python3`. The kit also needs
 the local patch in `vst/kit-patches/` (a tap outside an open dropdown closes it): `git -C "$MPC_VST" apply
 "$PWD/vst/kit-patches/0001-popup-tap-outside-closes.patch"`. To change the look or a page:
 

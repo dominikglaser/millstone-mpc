@@ -5,6 +5,7 @@
 # The canonical builds are the port kit's Docker ones (tools/build_port.sh, pinned gcc images); this is the
 # same sources and flags on the Zig toolchain (pip install ziglang) for machines without Docker.
 # Needs MPC_VST (a checkout of open-mpc/mpc-vst-plugins) and vst/build/params.h (gen_vst.py).
+[ -f "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh" ] && . "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh"   # python3 = the kit environment
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 MV=${MPC_VST:-$ROOT/../mpc-vst-plugins}

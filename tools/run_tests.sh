@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # All the JUCE-free checks for the MPC build: engine, fx and the fuzzer.
 # Needs MPC_VST (a checkout of open-mpc/mpc-vst-plugins). Usage: tools/run_tests.sh [fuzz_patches]
+[ -f "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh" ] && . "${MPC_DEV_KIT:-$HOME/mpc-dev-kit}/tools/env.sh"   # python3 = the kit environment
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 MV=${MPC_VST:-$ROOT/../mpc-vst-plugins}
