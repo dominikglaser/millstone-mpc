@@ -1,6 +1,6 @@
 """Ambient, cinematic and strange. Mostly slow, mostly long, a few that are just interesting to hold down."""
 from preset_helpers import *
-from preset_fx import echo, plate, spring, chorus, phaser, both
+from preset_fx import echo, plate, chorus, phaser, both
 
 PACK = "Space 1"
 

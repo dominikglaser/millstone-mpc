@@ -163,7 +163,6 @@ def lfo_voice():
         knob(cx, vy1 + GAP + 110, 36, lab, key, bw=140, extra=" ns=21")
     frame(LX1 + GAP, Y0, X1, Y1, "LFO")
     c2 = spread(LX1 + GAP, X1, 2)
-    cxm = (LX1 + GAP + X1) // 2
     popup(c2[0], 186, 170, "SHAPE", "lfo_shape")
     toggle(c2[1], 170, "SYNC", "lfo_sync")              # stacked, a switch plus its printed name apart (130 px)
     toggle(c2[1], 300, "RETRIG", "lfo_retrig")

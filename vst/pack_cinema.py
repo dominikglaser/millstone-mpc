@@ -4,7 +4,7 @@ the filter (VCA MODE and MOD SOURCE = TIDES n), Euclidean clocks scatter bells a
 sound sits in long plate reverb and tape echo. Hold the keys and let them breathe; the wheel and pressure open most of them up.
 """
 from preset_helpers import *
-from preset_fx import echo, plate, spring, chorus, phaser, both
+from preset_fx import echo, plate, chorus, phaser, both
 
 PACK = "Cinematic"
 

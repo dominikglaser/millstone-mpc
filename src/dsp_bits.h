@@ -3,6 +3,7 @@
 #pragma once
 #include <math.h>
 #include <stdint.h>
+#include <string.h>
 
 namespace ms {
 
@@ -10,6 +11,15 @@ static const float kRate = 44100.0f;
 
 static inline float clampf(float v, float lo, float hi) { return v < lo ? lo : v > hi ? hi : v; }
 static inline int clampi(int v, int lo, int hi) { return v < lo ? lo : v > hi ? hi : v; }
+
+// NaN/inf test that survives -ffast-math, which folds isnan()/isfinite() and even a plain bit test to "finite":
+// the empty asm hides the bits from the optimiser.
+static inline bool finite_bits(float f) {
+    uint32_t b;
+    memcpy(&b, &f, sizeof b);
+    __asm__ volatile("" : "+r"(b));
+    return (b & 0x7f800000u) != 0x7f800000u;
+}
 
 // Rational tanh approximation, good to about 1e-3 over -4..4 and saturating cleanly beyond.
 static inline float fast_tanh(float x) {

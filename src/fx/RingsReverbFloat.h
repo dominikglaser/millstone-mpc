@@ -50,6 +50,11 @@ class ReverbFloat {
     engine_.SetLFOFrequency(LFO_2, 0.3f / 48000.0f);
     lp_ = 0.7f;
     diffusion_ = 0.625f;
+    amount_ = 0.0f;   // Millstone: every field set, so a reset starts from a clean loop filter too
+    input_gain_ = 0.0f;
+    reverb_time_ = 0.0f;
+    lp_decay_1_ = 0.0f;
+    lp_decay_2_ = 0.0f;
   }
   
   void Process(float* left, float* right, size_t size) {

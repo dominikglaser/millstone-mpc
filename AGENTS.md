@@ -36,9 +36,9 @@ skills or `build.py` here: they assume a project layout this repo does not have.
 ```sh
 export MPC_VST=~/mpc-vst-plugins
 python3 "$MPC_VST/tools/gen_vst.py" vst/vst.json --params-h   # vst/build/params.h
-python3 "$MPC_VST/tools/gen_vst.py" vst/vst.json              # skin -> vst/build/skin/ (needs vst/build/shadow_art, see README)
+python3 "$MPC_VST/tools/gen_vst.py" vst/vst.json              # skin -> vst/build/skin/ (needs Playwright, see README)
 vst/build_zig.sh aarch64 && vst/build_zig.sh armv7            # Gen2 (64-bit) and Gen1 (32-bit) .so
-tools/run_tests.sh 300                                        # engine test, fx test, 300-patch fuzz
+tools/run_tests.sh 300                                        # engine test, fx test, 300-patch fuzz, Tides VCA test
 python3 vst/package_mpc.py --zip                              # dist/glaser - VST - Millstone/ (+ zip)
 python3 tools/check_mpc_folder.py "dist/glaser - VST - Millstone" --params vst/build/params.h
 ```
@@ -87,5 +87,6 @@ to MPC system files: do not suggest them for this repo.
 
 ## Device status
 
-Not yet tested on hardware. Track results in [`TESTING.md`](TESTING.md). The open question is CPU: 8 voices ×
+Loads, plays and draws its pages on the Key 37 Gen 2 (MPC OS 3.10.1, 2026-11-12); Q-Links, project restore and CPU are
+not checked yet. Track results in [`TESTING.md`](TESTING.md). The open question is CPU: 8 voices ×
 (3 Plaits + Elements + Tides) + 8 clocks + fx on the Key 37 Gen 2 may need a lower voice cap.

@@ -1,6 +1,6 @@
 """Drums, one hit per key, and a few kits that play themselves. Kicks want low notes (C1 to C2); everything else is tuned by the key you play."""
 from preset_helpers import *
-from preset_fx import echo, plate, spring, chorus, phaser, both
+from preset_fx import echo, plate, spring
 
 PACK = "Drums 1"
 OFF = dict(o1_on="OFF", o2_on="OFF", o3_on="OFF")

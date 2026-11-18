@@ -3,9 +3,17 @@
 #include "Saturator.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 
 namespace {
+// std::isfinite() is folded to true under -ffast-math (the device build); the empty asm hides the bits from the optimiser.
+inline bool finiteBits(float f) {
+    uint32_t b;
+    std::memcpy(&b, &f, sizeof b);
+    __asm__ volatile("" : "+r"(b));
+    return (b & 0x7f800000u) != 0x7f800000u;
+}
 constexpr float kBeats[] = { 0.125f, 1.0f / 6.0f, 0.25f, 1.0f / 3.0f, 0.375f, 0.5f, 2.0f / 3.0f, 0.75f, 1.0f, 4.0f / 3.0f, 1.5f, 2.0f, 3.0f, 4.0f };
 constexpr float kOutputCeiling = 0.944f;      // -0.5 dB, so that the effects cannot be what turns a host's meter red
 constexpr float kOutputKnee = 0.9f;           // of that ceiling
@@ -140,7 +148,7 @@ void FxChain::process(float* left, float* right, int numFrames) {
     // Nothing above has made a number that is not a number; if something ever does, it must not stay in a loop.
     float check = 0.0f;
     for (int i = 0; i < numFrames; ++i) check += left[i] + right[i];
-    if (!std::isfinite(check)) {
+    if (!finiteBits(check)) {
         reset();
         std::fill(left, left + numFrames, 0.0f);
         std::fill(right, right + numFrames, 0.0f);

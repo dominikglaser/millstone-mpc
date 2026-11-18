@@ -10,6 +10,8 @@ ROOT=$(cd "$(dirname "$0")/.." && pwd)
 MV=${MPC_VST:-$ROOT/../mpc-vst-plugins}
 ZIG=${ZIG:-"python3 -m ziglang"}
 TARGET=${1:-aarch64}
+# readelf only reports the exports and glibc level; macOS has none, Homebrew's LLVM ships llvm-readelf
+READELF=${READELF:-$(command -v readelf || command -v llvm-readelf || echo /opt/homebrew/opt/llvm/bin/llvm-readelf)}
 cd "$ROOT"
 SRC=$(python3 -c "import json;print(' '.join(json.load(open('vst/vst.json'))['build']['sources']))")
 SO=$(python3 -c "import json;print(json.load(open('vst/vst.json'))['so'])")
@@ -30,8 +32,8 @@ build() {   # build <triple> <outdir> <extra flags>
       -Wl,--no-undefined -Wl,--version-script=vst/exports.map -Wl,-s -o "$OUT/$SO"
   echo "built $OUT/$SO"
   file "$OUT/$SO" | sed 's/, BuildID.*//'
-  echo "exported: $(readelf --dyn-syms -W "$OUT/$SO" | grep -E ' GLOBAL .* [0-9]+ [A-Za-z]' | grep -v UND | awk '{print $8}' | tr '\n' ' ')"
-  echo "highest glibc: $(readelf -V "$OUT/$SO" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)"
+  echo "exported: $("$READELF" --dyn-syms -W "$OUT/$SO" | grep -E ' GLOBAL .* [0-9]+ [A-Za-z]' | grep -v UND | awk '{print $8}' | tr '\n' ' ')"
+  echo "highest glibc: $("$READELF" -V "$OUT/$SO" | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)"
   sha256sum "$OUT/$SO"
 }
 

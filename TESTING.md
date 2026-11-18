@@ -1,13 +1,17 @@
 # Testing
 
-## Offline (x86)
+## Offline (on the Mac or any x86/arm64 host)
 - `tools/run_tests.sh [patches]`: all the JUCE-free checks in one go — the engine test, the fx test
-  (each effect measured directly) and the engine fuzzer. Needs `MPC_VST` set to a checkout of the port kit.
+  (each effect measured directly), the engine fuzzer and the Tides VCA / filter test. Needs `MPC_VST` set to a checkout
+  of the port kit.
 - `tests/run.sh fast build/demo.wav`: just the engine tests (every model x every VCA mode makes sound and goes
   quiet, 3 oscillators + HP + drive + noise, polyphony and stealing, MONO note stack, LEGATO glide, sustain pedal,
-  state round-trip, worst-case CPU timing) and a demo WAV. `tests/run.sh asan` runs the same under ASan/UBSan.
-- `$MPC_VST/tools/test_port.sh vst/vst.json`: the port kit's wrapper-level host test. One known FAIL: the
-  step_of "steps one option" check taps a button twice within a block, which the wrapper's tap debounce drops.
+  state round-trip and a damaged state with nan/inf, worst-case CPU timing) and a demo WAV. `tests/run.sh asan` runs the same under ASan/UBSan.
+- `$MPC_VST/tools/test_port.sh vst/vst.json`: the port kit's wrapper-level host test. Known FAILs: the
+  step_of "steps one option" check taps a button twice within a block, which the wrapper's tap debounce drops; and six
+  generic stepping checks on `p_preset`, which the engine holds inside the current TYPE's range (TYPE Init has one
+  preset). On macOS the link fails on the wrapper's weak `mpc_engine_changed` until the kit passes
+  `-Wl,-undefined,dynamic_lookup` (a kit issue).
 
 ## Package (Akai SDK format)
 - `python3 vst/package_mpc.py --zip` then `python3 tools/check_mpc_folder.py "dist/glaser - VST - Millstone" --params

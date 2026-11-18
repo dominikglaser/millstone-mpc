@@ -228,7 +228,6 @@ def wood(w, h, mirror=False, seed=0):
 def panel():
     """The 1280x628 plate: cream face, top-left light, fine grain, a bevelled edge and four screws."""
     W, H = 1280, 628
-    rnd = random.Random(7)
     gx = Image.linear_gradient("L").rotate(90).resize((W, H))      # light falls from left to right
     gy = Image.linear_gradient("L").resize((W, H))                 # and from top to bottom
     light = ImageChops.add(gx, gy, 2.0)                            # diagonal, as the kit notes suggest

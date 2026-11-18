@@ -198,6 +198,16 @@ int main(int argc, char **argv) {
     E->set_param(in2, "state", st);
     CHECK(fabsf(getf(in2, "cutoff") - 33) < 1e-3 && getf(in2, "o2_engine") == 17 && getf(in2, "lfo_shape") == 3,
           "state restores cutoff %.1f, o2_engine %.0f, lfo_shape %.0f", getf(in2, "cutoff"), getf(in2, "o2_engine"), getf(in2, "lfo_shape"));
+    // a damaged blob: non-numbers fall back to the default (compared as text: -ffast-math folds NaN tests away)
+    E->set_param(in2, "state", "cutoff=nan\nreso=inf\no2_engine=-inf\n");
+    char bc[64] = "", br[64] = "", be[64] = "";
+    E->get_param(in2, "cutoff", bc, sizeof bc); E->get_param(in2, "reso", br, sizeof br); E->get_param(in2, "o2_engine", be, sizeof be);
+    void *in3 = E->create(0);
+    char dc[64] = "", dr[64] = "";
+    E->get_param(in3, "cutoff", dc, sizeof dc); E->get_param(in3, "reso", dr, sizeof dr);
+    E->destroy(in3);
+    CHECK(!strcmp(bc, dc) && !strcmp(br, dr) && !strcmp(be, "0"),
+          "state with nan/inf falls back to the defaults (cutoff %s, reso %s, o2_engine %s)", bc, br, be);
     E->destroy(in2);
 
     // 9. CPU: worst case, 8 voices x 3 oscillators, heavy models, 10 s of audio

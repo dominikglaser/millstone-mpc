@@ -272,6 +272,7 @@ float param_default(int i) {
 
 float param_clamp(int i, float v) {
     const param_t &p = PARAMS[i];
+    if (!finite_bits(v)) return param_default(i);   // a damaged state blob or preset can say "nan" or "inf"
     if (p.nopts) return (float)clampi((int)lroundf(v), 0, p.nopts - 1);
     return clampf(v, p.min, p.max);
 }
@@ -513,7 +514,8 @@ CordState read_cords(const Instance *in, const Voice *v, bool gated, float at) {
             case S_NOISE: value = v->noise_last; break;
             case S_TIDES1: case S_TIDES2: case S_TIDES3: case S_TIDES4: value = v->tides_out[source - S_TIDES1]; break;
             case S_CLOCK1: case S_CLOCK1 + 1: case S_CLOCK1 + 2: case S_CLOCK1 + 3: case S_CLOCK1 + 4: case S_CLOCK1 + 5: case S_CLOCK1 + 6: case S_CLOCK8: value = in->clock_out[source - S_CLOCK1]; break;
-            default: value = v->osc_last[source - S_OSC1]; break;   // stepped like a CV input on the real module
+            case S_OSC1: case S_OSC2: case S_OSC3: value = v->osc_last[source - S_OSC1]; break;   // stepped like a CV input on the real module
+            default: break;
         }
         st.amount[dest] += value * amount;
     }

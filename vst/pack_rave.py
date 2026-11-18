@@ -1,6 +1,6 @@
 """Early rave and everything after it: hoovers, stabs, supersaws, risers. Hoovers live on portamento: play them legato."""
 from preset_helpers import *
-from preset_fx import echo, plate, spring, chorus, phaser, both
+from preset_fx import echo, plate, chorus, phaser, both
 
 PACK = "Rave 1"
 

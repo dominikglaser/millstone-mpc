@@ -1,6 +1,6 @@
 """The synths everyone has heard: brass, strings, big poly pads, fat mono leads, FM keys. In the spirit of them, not copies."""
 from preset_helpers import *
-from preset_fx import echo, plate, spring, chorus, phaser, both
+from preset_fx import echo, plate, chorus, phaser, both
 
 PACK = "Classic 1"
 

@@ -1,6 +1,6 @@
 """Warehouse and modular techno: rumble, drive, repetition. Many of these play themselves while a key is held, with the song."""
 from preset_helpers import *
-from preset_fx import echo, plate, spring, chorus, phaser, both
+from preset_fx import echo, plate, chorus, both
 
 PACK = "Techno 1"
 

@@ -5,7 +5,8 @@ XL) and Gen1 (32-bit). It runs inside the MPC's own plugin host as a native VST2
 This is the MPC-only build of [Millstone](https://github.com/dominikglaser/millstone); the macOS plugin lives in that
 separate repo.
 
-> **Status: in development, not yet tested on hardware.** Needs **MPC OS 3.10.1 or later**, which loads third-party plugins
+> **Status: in development.** It loads, plays and draws its pages on an MPC Key 37 Gen 2 (MPC OS 3.10.1); Q-Links,
+> project restore and CPU load are not checked yet ([`TESTING.md`](TESTING.md)). Needs **MPC OS 3.10.1 or later**, which loads third-party plugins
 > officially through Akai's [MPC Plugin SDK](https://github.com/inmusic-software/mpc-plugin-builder-sdk) folder format.
 > inMusic does not test or support third-party plugins: save your work often.
 
@@ -31,7 +32,7 @@ Eight function keys, in signal-flow order. Pressing a key again cycles its pages
 | MOD | MOD 1-6 · MOD 7-12 (patch bay as a mod matrix) |
 | CLK | CLK 1-2 · CLK 3-4 · CLK 5-6 · CLK 7-8 (Euclidean clocks, two per page; SRC and BPM on CLK 1-2) |
 | FX | PHASER · CHORUS · DELAY · REVERB (with the master OUTPUT) |
-| PRESETS | the 700 factory sounds by TYPE (Bass, Keys, Pad ...): pick a type, step with - / + |
+| PRESETS | the 750 factory presets by TYPE (Bass, Keys, Pad ...): pick a type, step with - / + |
 
 The factory sounds are also in MPC's own PRESET menu (one flat list; category folders there are only for Akai's own
 plugin format) and, by category, behind the MILLSTONE tile in Sounds > Instruments. Your own presets: the save/load
@@ -49,7 +50,8 @@ the voices are **two LFOs**, **Tides**, **eight Euclidean clocks** and a **patch
 destinations. After them comes a rack of **phaser, chorus, tape echo and reverb**. There is no sequencer or arpeggiator: drive it
 from the MPC's sequencer, pads and keys.
 
-It comes with 750 synth presets (including the 50-sound Cinematic pack) and 40 FX presets.
+It comes with 750 presets (Init and 749 sounds, including the 50-sound Cinematic pack). The 40 effect-rack presets in
+`vst/fx_presets.json` are not part of this build yet.
 
 ## Signal flow
 
@@ -90,13 +92,14 @@ which wraps the shared engine as a VST2 and draws the skin as native MPC pages.
 python3 "$MPC_VST/tools/gen_vst.py" vst/vst.json --params-h   # parameters
 python3 "$MPC_VST/tools/gen_vst.py" vst/vst.json              # skin (TUI.json, Q-Links.json, images)
 vst/build_zig.sh aarch64 && vst/build_zig.sh armv7            # Gen2 and Gen1 .so (Zig; no Docker)
-tools/run_tests.sh                                            # engine, fx and fuzz checks
+tools/run_tests.sh                                            # engine, fx, fuzz and Tides VCA checks
 python3 vst/package_mpc.py --zip                              # dist/: the folder in Akai's SDK format, and a zip
 python3 tools/check_mpc_folder.py "dist/glaser - VST - Millstone" --params vst/build/params.h
 ```
 
 The skin uses the kit's browser renderer (`"art": "html"` in `vst/vst.json`), which needs Playwright's Chromium, installed
-once: `python3 -m pip install --user playwright pillow && python3 -m playwright install chromium`. The kit also needs
+once: `python3 -m pip install --user playwright pillow ziglang && python3 -m playwright install chromium` (`ziglang` is
+the cross-compiler `vst/build_zig.sh` uses). The kit also needs
 the local patch in `vst/kit-patches/` (a tap outside an open dropdown closes it): `git -C "$MPC_VST" apply
 "$PWD/vst/kit-patches/0001-popup-tap-outside-closes.patch"`. To change the look or a page:
 
@@ -105,7 +108,20 @@ python3 vst/skin/make_art.py            # knob strip, plate with wood cheeks, sw
 python3 vst/skin/pages.py vst/layout.conf   # every [tab] section of layout.conf, from one grid
 ```
 
-Then rebuild as above. `tools/mpc_screenshot.sh <ip> shot.png --plugin` grabs the MPC's screen (read-only, needs
+Then rebuild as above. The factory presets go into the package as `.xpl` files (`vst/build/presets_xpl/`, the MILLSTONE
+tile in Sounds > Instruments); after changing presets or parameters, regenerate them before packaging:
+
+```sh
+python3 vst/make_presets.py                                   # vst/presets.json and vst/PRESETS.md
+g++ -std=gnu++14 -O2 -ffast-math -w -DTEST -include cstdio -Isrc -Isrc/third_party/eurorack -Ivst/build -I"$MPC_VST/wrapper" \
+    $(python3 -c "import json;print(' '.join(json.load(open('vst/vst.json'))['build']['sources']))") \
+    tools/preset_states.cpp -lm -o build/tests/preset_states
+python3 vst/make_xpl.py --values > build/tests/preset_values.txt
+build/tests/preset_states < build/tests/preset_values.txt > build/tests/preset_states.txt
+python3 vst/make_xpl.py build/tests/preset_states.txt vst/build/presets_xpl
+```
+
+`tools/mpc_screenshot.sh <ip> shot.png --plugin` grabs the MPC's screen (read-only, needs
 developer mode) to check a page on the device.
 
 The packaged folder follows Akai's specification, vendored in [`docs/akai-sdk/`](docs/akai-sdk/README.md):

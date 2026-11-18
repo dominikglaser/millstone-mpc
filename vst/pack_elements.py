@@ -1,6 +1,6 @@
 """Elements on OSC 1: things that are bowed, blown and struck. Some alone, some with the other oscillators beside them or driving them."""
 from preset_helpers import *
-from preset_fx import echo, plate, spring, chorus, phaser, both
+from preset_fx import echo, plate, spring, chorus, both
 
 PACK = "Elements 1"
 
