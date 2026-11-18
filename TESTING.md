@@ -6,7 +6,8 @@
   of the port kit.
 - `tests/run.sh fast build/demo.wav`: just the engine tests (every model x every VCA mode makes sound and goes
   quiet, 3 oscillators + HP + drive + noise, polyphony and stealing, MONO note stack, LEGATO glide, sustain pedal,
-  state round-trip and a damaged state with nan/inf, worst-case CPU timing) and a demo WAV. `tests/run.sh asan` runs the same under ASan/UBSan.
+  state round-trip and a damaged state with nan/inf, the PRESETS page's name lists (stepper, picks in every list,
+  `p_index` from MPC's PRESET menu, host reports, restore of new and older states), worst-case CPU timing) and a demo WAV. `tests/run.sh asan` runs the same under ASan/UBSan.
 - `$MPC_VST/tools/test_port.sh vst/vst.json`: the port kit's wrapper-level host test. Known FAILs: the
   step_of "steps one option" check taps a button twice within a block, which the wrapper's tap debounce drops; and six
   generic stepping checks on `p_preset`, which the engine holds inside the current TYPE's range (TYPE Init has one

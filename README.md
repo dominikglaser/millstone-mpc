@@ -32,7 +32,7 @@ Eight function keys, in signal-flow order. Pressing a key again cycles its pages
 | MOD | MOD 1-6 · MOD 7-12 (patch bay as a mod matrix) |
 | CLK | CLK 1-2 · CLK 3-4 · CLK 5-6 · CLK 7-8 (Euclidean clocks, two per page; SRC and BPM on CLK 1-2) |
 | FX | PHASER · CHORUS · DELAY · REVERB (with the master OUTPUT) |
-| PRESETS | the 750 factory presets by TYPE (Bass, Keys, Pad ...): pick a type, step with - / + |
+| PRESETS | the 750 factory presets by TYPE (Bass, Keys, Pad ...): pick a type, step with - / +, or double-tap PRESET for a list of the type's names (types over 60 sounds come in two alphabetical halves, each with its own NAMES box) |
 
 The factory sounds are also in MPC's own PRESET menu (one flat list; category folders there are only for Akai's own
 plugin format) and, by category, behind the MILLSTONE tile in Sounds > Instruments. Your own presets: the save/load

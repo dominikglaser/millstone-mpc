@@ -8,6 +8,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -30,6 +31,7 @@ int main(int argc, char **argv) {
         for (int i = 0; i < NPARAMS; i++) {
             const param_t &p = PARAMS[i];
             if (p.momentary || p.popup_of >= 0) continue;
+            if (!strcmp(p.key, "p_list") || !strcmp(p.key, "p_index") || !strncmp(p.key, "p_pick_", 7)) continue;   // the name lists load presets
             if (p.nopts) snprintf(v, sizeof v, "%d", below(p.nopts));
             else if (p.int_display) snprintf(v, sizeof v, "%d", (int)p.min + below((int)(p.max - p.min) + 1));
             else snprintf(v, sizeof v, "%g", p.min + (p.max - p.min) * unit());

@@ -310,13 +310,44 @@ def clocks(first):
     out.append('qlinks "CLK %d-%d" = %s' % (first, first + 1, ",".join(keys)))
 
 
+LIST_COLS, LIST_CW = 5, 250   # a name list: 5 columns of 250 px over the full width, rows of 40 px (the kit's), 18 px text
+
+
+def preset_lists():
+    """The name lists of vst/gen_preset_types.py (from params.json and presets.json)."""
+    import json
+    import os
+    vst = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+    sys.path.insert(0, vst)
+    import gen_preset_types
+    d = json.load(open(os.path.join(vst, "params.json")))
+    params = {p["key"]: p for p in d["params"]}
+    types, _, _, lists = gen_preset_types.compute(params, json.load(open(os.path.join(vst, "presets.json")))["presets"])
+    return types, lists
+
+
 def presets():
     tab("PRESETS")
     frame(X0, Y0, X1, Y1, "PRESETS")
-    popup(640, 236, 560, "TYPE", "p_type", h=66, extra=" cols=2 cw=300")
-    out.append('stepper cx=640 cy=440 w=1000 h=92 label="PRESET" key=p_preset tsize=44 tweight=bold tcolor=1d1a16')
-    text(640, 600, "TYPE PICKS A CATEGORY, - / + STEP THROUGH IT. EVERY STEP LOADS THE SOUND.", 1.4, "4a443b")
-    text(640, 636, "YOUR OWN SOUNDS: THE SAVE / LOAD ICONS AT THE TOP RIGHT.", 1.4, "4a443b")
+    popup(640, 206, 560, "TYPE", "p_type", h=66, extra=" cols=2 cw=300")
+    # A double tap on PRESET opens the list holding the current sound (vst/skin/skin_post.py adds that to the stepper's text)
+    out.append('stepper cx=640 cy=360 w=1000 h=92 label="PRESET" key=p_preset tsize=44 tweight=bold tcolor=1d1a16')
+    # Each list also has its own box below: a type of more than 60 names has two alphabetical halves, one box each.
+    # The box is the popup's field with its value hidden (accent=none); the range is printed into it.
+    types, lists = preset_lists()
+    for t, tname in enumerate(types):
+        mine = [l for l in lists if l["type"] == t and len(l["names"]) > 1]
+        xs = [640] if len(mine) == 1 else [460, 820]
+        for x, l in zip(xs, mine):
+            popup(x, 506, 320, "NAMES", l["key"], h=60, extra=" accent=none cols=%d cw=%d when=p_type:%d" % (LIST_COLS, LIST_CW, t))
+            text(x, 498, "%s %s" % (tname.upper(), l["label"]) if l["label"] else "%s: ALL %d" % (tname.upper(), len(l["names"])),
+                 1.9, "1d1a16")
+            out[-1] += " when=p_type:%d" % t
+        if not mine:
+            text(640, 498, "ONE SOUND: NO LIST", 1.6, "4a443b")
+            out[-1] += " when=p_type:%d" % t
+    text(640, 606, "TYPE PICKS A CATEGORY, - / + STEP THROUGH IT. A NAMES BOX, OR A DOUBLE TAP ON PRESET, LISTS IT.", 1.4, "4a443b")
+    text(640, 642, "EVERY CHOICE LOADS THE SOUND. YOUR OWN SOUNDS: THE SAVE / LOAD ICONS AT THE TOP RIGHT.", 1.4, "4a443b")
 
 
 PAGES = [lambda: osc(1, True), lambda: osc(2, False), lambda: osc(3, False), filter_vca, envelopes, lfo_voice,

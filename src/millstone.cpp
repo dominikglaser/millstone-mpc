@@ -255,6 +255,8 @@ struct Instance {
     float mix[kChunk];
     float out[kChunk];
     char state_buf[8192];
+    unsigned char changed[NPARAMS];   // params the engine moved by itself, for the host (mpc_engine_changed)
+    int changed_count = 0, changed_at = 0;
 
     FxChain fx;            // phaser -> chorus -> tape delay -> reverb, after the voices
     int fxi[29];           // cached param indices for the fx chain (resolved in ms_create)
@@ -1189,20 +1191,97 @@ void load_typed_preset(Instance *in) {
     for (int v = 0; v < PRESETS[p].n; v++)
         ms_set_param(in, PARAMS[PRESETS[p].values[v].param].key, PRESETS[p].values[v].value);
 }
+
+// The name lists (vst/gen_preset_types.py): a double tap on PRESET opens the list p_list names; a pick in list k
+// (param p_pick_...) loads that preset. p_list, the list's pick and p_index follow TYPE / PRESET however those change
+// (stepper, a pick, MPC's PRESET menu through p_index, a restore). None of them is saved: a restore recomputes them.
+struct PresetKeys {
+    int type, preset, list, index, pick[PRESET_LISTS];
+    PresetKeys() : type(key_index("p_type")), preset(key_index("p_preset")), list(key_index("p_list")), index(key_index("p_index")) {
+        for (int k = 0; k < PRESET_LISTS; k++) pick[k] = key_index(PRESET_LIST_KEY[k]);
+    }
+    int list_of(int i) const {
+        for (int k = 0; k < PRESET_LISTS; k++)
+            if (pick[k] == i) return k;
+        return -1;
+    }
+    bool derived(int i) const { return i >= 0 && (i == list || i == index || list_of(i) >= 0); }
+};
+const PresetKeys &PK() { static PresetKeys k; return k; }
+
+// Sets a param the engine moves by itself, and tells the host if it changed.
+void set_reported(Instance *in, int i, float v) {
+    if (i < 0 || in->val[i] == v) return;
+    in->val[i] = v;
+    if (!in->changed[i]) { in->changed[i] = 1; in->changed_count++; }
+}
+
+void sync_lists(Instance *in) {
+    const int p = typed_preset(in, 0);
+    if (p < 0) return;
+    const PresetKeys &k = PK();
+    const int l = PRESET_LIST_OF[p];
+    set_reported(in, k.list, (float)l);
+    if (k.pick[l] >= 0) set_reported(in, k.pick[l], (float)PRESET_OPT_OF[p]);
+    set_reported(in, k.index, (float)p);
+}
 #endif
+
+// The PRESETS page's name-list params: derived from TYPE / PRESET, so never saved or restored.
+bool derived_param(int i) {
+#ifdef NPRESETS
+    return PK().derived(i);
+#else
+    (void)i;
+    return false;
+#endif
+}
 
 void ms_set_param(void *inst, const char *key, const char *val) {
     Instance *in = (Instance *)inst;
 #ifdef NPRESETS
-    if (!strcmp(key, "p_type") || !strcmp(key, "p_preset")) {
-        const int i = key_index(key), ti = key_index("p_type"), pi = key_index("p_preset");
-        if (i < 0 || ti < 0 || pi < 0) return;
-        const int type_before = (int)lroundf(in->val[ti]);
-        set_param_idx(in, i, (float)atof(val));
-        if (i == ti && (int)lroundf(in->val[ti]) == type_before) return;   // the same type again: keep the sound
-        if (i == ti) in->val[pi] = 1.0f;                                    // a new type starts at its first preset
-        load_typed_preset(in);
-        return;
+    if (!strncmp(key, "p_", 2)) {   // the PRESETS page
+        const PresetKeys &k = PK();
+        const int i = key_index(key), ti = k.type, pi = k.preset;
+        if (i >= 0 && ti >= 0 && pi >= 0 && (i == ti || i == pi)) {
+            const int type_before = (int)lroundf(in->val[ti]);
+            set_param_idx(in, i, (float)atof(val));
+            if (i == ti && (int)lroundf(in->val[ti]) == type_before) return;   // the same type again: keep the sound
+            if (i == ti) set_reported(in, pi, 1.0f);                           // a new type starts at its first preset
+            const float preset_before = in->val[pi];
+            load_typed_preset(in);   // a step past the end of a type stays on its last preset: the host hears so
+            if (in->val[pi] != preset_before && !in->changed[pi]) { in->changed[pi] = 1; in->changed_count++; }
+            sync_lists(in);
+            return;
+        }
+        if (i >= 0 && i == k.index) {   // the last value of a factory preset from MPC's PRESET menu: it is loaded, the page follows
+            set_param_idx(in, i, (float)atof(val));
+            const int p = (int)lroundf(in->val[i]);
+            if (p >= 0 && p < NPRESETS && ti >= 0 && pi >= 0) {
+                set_reported(in, ti, (float)PRESET_TYPE[p]);
+                set_reported(in, pi, (float)PRESET_SLOT_OF[p]);
+            }
+            sync_lists(in);
+            return;
+        }
+        const int l = k.list_of(i);
+        if (l >= 0) {   // a name picked in a list: load it
+            set_param_idx(in, i, (float)atof(val));
+            const int n = PRESET_LIST_COUNT[l];
+            if (n > 0 && ti >= 0 && pi >= 0) {
+                const int o = clampi((int)lroundf(in->val[i]), 0, n - 1);
+                set_reported(in, ti, (float)PRESET_LIST_TYPE[l]);
+                set_reported(in, pi, (float)PRESET_LIST_SLOT[PRESET_LIST_START[l] + o]);
+                load_typed_preset(in);
+            }
+            sync_lists(in);
+            return;
+        }
+        if (i >= 0 && i == k.list) {   // the engine's own: a write from outside is put back
+            set_param_idx(in, i, (float)atof(val));
+            sync_lists(in);
+            return;
+        }
     }
 #endif
     if (!strcmp(key, "lfo_bpm")) { in->bpm = clampf((float)atof(val), 20.0f, 300.0f); return; }
@@ -1221,12 +1300,15 @@ void ms_set_param(void *inst, const char *key, const char *val) {
                     memcpy(k, p, kl);
                     k[kl] = 0;
                     int i = key_index(k);
-                    if (i >= 0 && !PARAMS[i].momentary && PARAMS[i].popup_of < 0) set_param_idx(in, i, (float)atof(eq + 1));
+                    if (i >= 0 && !PARAMS[i].momentary && PARAMS[i].popup_of < 0 && !derived_param(i)) set_param_idx(in, i, (float)atof(eq + 1));
                 }
             }
             if (!*nl) break;
             p = nl + 1;
         }
+#ifdef NPRESETS
+        sync_lists(in);   // the name lists follow the restored TYPE / PRESET (older states have no list params at all)
+#endif
         return;
     }
     int i = key_index(key);
@@ -1239,7 +1321,7 @@ int ms_get_param(void *inst, const char *key, char *buf, int buf_len) {
     if (!strcmp(key, "state")) {
         int pos = 0;
         for (int i = 0; i < NPARAMS; i++) {
-            if (PARAMS[i].momentary || PARAMS[i].popup_of >= 0) continue;   // the wrapper owns popup flags
+            if (PARAMS[i].momentary || PARAMS[i].popup_of >= 0 || derived_param(i)) continue;   // the wrapper owns popup flags
             int n = snprintf(buf + pos, buf_len - pos, "%s=%g\n", PARAMS[i].key, in->val[i]);
             if (n < 0 || pos + n >= buf_len) return 0;
             pos += n;
@@ -1280,3 +1362,21 @@ const mpc_engine_t kEngine = {ms_create, ms_destroy, ms_midi, ms_set_param, ms_g
 }  // namespace
 
 extern "C" const mpc_engine_t *mpc_engine(void) { return &kEngine; }
+
+// The params the engine moved by itself (the PRESETS page's TYPE, PRESET and name lists), one key per call
+// (wrapper/engine.h). The wrapper asks once per host block, under the engine lock, until this returns 0.
+extern "C" int mpc_engine_changed(void *inst, char *key, int len) {
+    Instance *in = (Instance *)inst;
+    if (!in || in->changed_count <= 0) return 0;
+    for (int n = 0; n < NPARAMS; n++) {
+        const int i = (in->changed_at + n) % NPARAMS;
+        if (!in->changed[i]) continue;
+        in->changed[i] = 0;
+        in->changed_count--;
+        in->changed_at = i + 1;
+        snprintf(key, len, "%s", PARAMS[i].key);
+        return 1;
+    }
+    in->changed_count = 0;
+    return 0;
+}

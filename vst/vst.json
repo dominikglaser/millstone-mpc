@@ -6,6 +6,7 @@
   "so": "millstone.so",
   "params": "params.json",
   "layout": "layout.conf",
+  "skin_post": "skin/skin_post.py",
   "art": "html",
   "presets": "presets.json",
   "targets": ["armv7", "aarch64"],

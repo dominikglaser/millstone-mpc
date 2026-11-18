@@ -11,6 +11,10 @@ extern "C" {
 #include "engine.h"
 }
 #include "params.h"
+#ifdef NPRESETS
+#include "preset_types.h"
+extern "C" int mpc_engine_changed(void *inst, char *key, int len);
+#endif
 
 // Every allocation starts as a huge float. Plaits' ChiptuneEngine::Init leaves its last oscillator uninitialised, and at a
 // phase this size subtracting 1 changes nothing, so that oscillator's loop never ends and the audio thread freezes. Real
@@ -60,6 +64,8 @@ static void reset_all(void *in) {
     cc(in, 123, 0);
     for (int i = 0; i < NPARAMS; i++) {
         if (PARAMS[i].momentary || PARAMS[i].popup_of >= 0) continue;
+        const char *k = PARAMS[i].key;   // the PRESETS page's name lists: a write loads a preset, a restore skips them
+        if (!strcmp(k, "p_list") || !strcmp(k, "p_index") || !strncmp(k, "p_pick_", 7)) continue;
         float v = PARAMS[i].nopts ? roundf(PARAMS[i].def * (PARAMS[i].nopts - 1)) : PARAMS[i].min + (PARAMS[i].max - PARAMS[i].min) * PARAMS[i].def;
         setf(in, PARAMS[i].key, v);
     }
@@ -209,6 +215,71 @@ int main(int argc, char **argv) {
     CHECK(!strcmp(bc, dc) && !strcmp(br, dr) && !strcmp(be, "0"),
           "state with nan/inf falls back to the defaults (cutoff %s, reso %s, o2_engine %s)", bc, br, be);
     E->destroy(in2);
+
+#ifdef NPRESETS
+    // 8b. the PRESETS page's name lists follow TYPE / PRESET, a pick loads, p_index (MPC's PRESET menu) moves the page
+    {
+        void *pg = E->create(0);
+        const auto key_of = [](const char *k) { for (int i = 0; i < NPARAMS; i++) if (!strcmp(PARAMS[i].key, k)) return i; return -1; };
+        const auto page_ok = [&](int p) {   // TYPE, PRESET, list, pick and number all name preset p
+            const int l = PRESET_LIST_OF[p];
+            char name[64] = "";
+            E->get_param(pg, "p_preset_display", name, sizeof name);
+            return (int)getf(pg, "p_type") == PRESET_TYPE[p] && (int)getf(pg, "p_preset") == PRESET_SLOT_OF[p]
+                   && (int)getf(pg, "p_list") == l && (int)getf(pg, PRESET_LIST_KEY[l]) == PRESET_OPT_OF[p]
+                   && (int)getf(pg, "p_index") == p && !strcmp(name, PRESETS[p].name);
+        };
+        bool ok = true;
+        int bad = -1;
+        for (int p = 1; p < NPRESETS; p += 7) {   // the stepper: TYPE, then PRESET
+            setf(pg, "p_type", PRESET_TYPE[p]);
+            setf(pg, "p_preset", PRESET_SLOT_OF[p]);
+            if (!page_ok(p)) { ok = false; bad = p; break; }
+        }
+        CHECK(ok, "TYPE / PRESET: the list, its pick and the number follow (first wrong: preset %d)", bad);
+        ok = true;
+        for (int k = 0; k < PRESET_LISTS && ok; k++)   // a pick in every list, first and last name
+            for (int o = 0; o < PRESET_LIST_COUNT[k] && ok; o += PRESET_LIST_COUNT[k] > 1 ? PRESET_LIST_COUNT[k] - 1 : 1) {
+                setf(pg, PRESET_LIST_KEY[k], (float)o);
+                int p = -1;
+                for (int q = 0; q < NPRESETS; q++) if (PRESET_LIST_OF[q] == k && PRESET_OPT_OF[q] == o) p = q;
+                const int ki = key_of(PRESET_LIST_KEY[k]);
+                ok = p >= 0 && page_ok(p) && ki >= 0 && !strcmp(PARAMS[ki].opts[o], PRESETS[p].name);
+                if (!ok) bad = k * 1000 + o;
+            }
+        CHECK(ok, "a pick in each of the %d lists loads that name (first wrong: list/option %d)", PRESET_LISTS, bad);
+        setf(pg, "p_type", 4); setf(pg, "p_preset", 5);   // Pad 5
+        setf(pg, "cutoff", 12);
+        setf(pg, "p_index", 600);   // the last value of preset 600 from MPC's PRESET menu: the page follows, nothing reloads
+        CHECK(page_ok(600) && fabsf(getf(pg, "cutoff") - 12) < 1e-3, "p_index moves TYPE / PRESET without reloading (cutoff %.0f)", getf(pg, "cutoff"));
+        const int hp = 333;   // MPC's PRESET menu: the wrapper sets the preset's values in order
+        for (int v = 0; v < PRESETS[hp].n; v++) E->set_param(pg, PARAMS[PRESETS[hp].values[v].param].key, PRESETS[hp].values[v].value);
+        CHECK(page_ok(hp), "a preset from MPC's PRESET menu moves the page to it (%s)", PRESETS[hp].name);
+        char key[64];
+        while (mpc_engine_changed(pg, key, sizeof key) > 0) {}
+        int k = PRESET_LIST_OF[100] == PRESET_LIST_OF[hp] ? PRESET_LIST_OF[400] : PRESET_LIST_OF[100];
+        setf(pg, PRESET_LIST_KEY[k], 0);
+        bool rt = false, rp = false, rl = false;
+        while (mpc_engine_changed(pg, key, sizeof key) > 0) { rt |= !strcmp(key, "p_type"); rp |= !strcmp(key, "p_preset"); rl |= !strcmp(key, "p_list"); }
+        CHECK(rt && rp && rl, "a pick in another type tells the host TYPE (%d), PRESET (%d) and the list (%d)", rt, rp, rl);
+        setf(pg, "p_type", 7); setf(pg, "p_preset", 60);   // Sequence 60
+        int p60 = (int)getf(pg, "p_index");
+        static char st2[8192];
+        E->get_param(pg, "state", st2, sizeof st2);
+        void *pr = E->create(0);
+        E->set_param(pr, "state", st2);
+        void *keep = pg; pg = pr;
+        CHECK(!strstr(st2, "p_pick_") && !strstr(st2, "p_list=") && !strstr(st2, "p_index=") && page_ok(p60),
+              "the lists are not saved, and a restore puts them back (%s)", PRESETS[p60].name);
+        E->set_param(pr, "state", "p_type=2\np_preset=7\ncutoff=40\n");   // an older state, without the list params
+        int p27 = -1;
+        for (int q = 0, seen = 0; q < NPRESETS; q++) if (PRESET_TYPE[q] == 2 && ++seen == 7) p27 = q;
+        CHECK(p27 >= 0 && page_ok(p27), "an older state restores TYPE / PRESET and the lists follow");
+        pg = keep;
+        E->destroy(pr);
+        E->destroy(pg);
+    }
+#endif
 
     // 9. CPU: worst case, 8 voices x 3 oscillators, heavy models, 10 s of audio
     reset_all(in);

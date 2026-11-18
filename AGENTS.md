@@ -26,6 +26,8 @@ skills or `build.py` here: they assume a project layout this repo does not have.
 | Local patch the port kit needs (dropdown closes on a tap outside) | `vst/kit-patches/` |
 | Function-key grouping of the skin's pages (sub-tabs) | `FN_KEYS` in `vst/package_mpc.py` |
 | Factory presets as .xpl files (tile page) and the PRESETS page's type table | `vst/make_xpl.py`, `vst/gen_preset_types.py` |
+| PRESETS page name lists: params `p_list`, `p_pick_<type>_1/2`, `p_index` (generated into `params.json` by `gen_preset_types.py --params`, which `make_presets.py` runs), engine `sync_lists` | `vst/gen_preset_types.py`, `src/millstone.cpp` |
+| TUI.json touch-up after the skin build (double tap on PRESET opens the current list) | `vst/skin/skin_post.py` (`"skin_post"` in `vst/vst.json`) |
 | SDK-format packaging | `vst/package_mpc.py` |
 | SDK-rule check of the packaged folder | `tools/check_mpc_folder.py` |
 | Engine, fx, vendored Mutable DSP | `src/millstone.cpp`, `src/fx/`, `src/third_party/eurorack/` |
@@ -55,6 +57,9 @@ Never report a build as done unless `run_tests.sh` passes and `check_mpc_folder.
 - The renderer clips CSS shadows at a control's image box: bake shadows into the image with margin (`make_art.py`).
 - MPC's PRESET menu is one flat list for a VST2; the PRESETS page (params `p_type`/`p_preset`, engine
   `load_typed_preset`) gives categories. The tile page loads `.xpl` presets only while the program list exists.
+- Popup rows are 40 px (the kit's): a list of 97 names would need 7 columns of 180 px and about 14 px text, so a type
+  over 60 names is split into two alphabetical lists of 5 columns x 250 px at the usual 18 px. The list params are
+  derived (never saved; a restore recomputes them) and every factory preset sets `p_index` last.
 - Check a page on the device with `tools/mpc_screenshot.sh <ip> shot.png --plugin`.
 
 ## Installing on an MPC (the official route)
